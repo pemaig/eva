@@ -1,5 +1,8 @@
 const assert = require('assert');
 
+const UNIMPLEMENTED_ERROR = 'Unimplemented';
+const ADDITION_ERROR = 'One of the addition variables is not a Number';
+
 function _throw(msg) {
     throw new Error(msg);
 }
@@ -18,19 +21,18 @@ function isAddition(exp) {
 }
 function sum(exp) {
     // ['+', ['+', 2, 3], 5] = 10
-    const ERROR = 'One of the addition variables is not a Number';
     const left = exp[1];
     const right = exp[2];
 
     return (
         (isAddition(left) ? sum(left)
             : isNumber(left) ? left
-                : _throw(ERROR)
+                : _throw(ADDITION_ERROR)
         )
         +
         (isAddition(right) ? sum(right)
             : isNumber(right) ? right
-                : _throw(ERROR)
+                : _throw(ADDITION_ERROR)
         )
     );
 }
@@ -47,7 +49,7 @@ class Eva {
             return sum(exp);
         }
 
-        _throw('Unimplemented');
+        _throw(UNIMPLEMENTED_ERROR);
     }
 }
 
