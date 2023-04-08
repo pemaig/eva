@@ -1,6 +1,6 @@
 const assert = require('assert');
 
-const UNIMPLEMENTED_ERROR = 'Unimplemented';
+const UNIMPLEMENTED_ERROR = 'Unimplemented expression: ';
 const ADDITION_ERROR = 'One of the addition variables is not a Number';
 
 function _throw(msg) {
@@ -20,7 +20,6 @@ function isAddition(exp) {
     return exp[0] === '+';
 }
 function sum(exp) {
-    // ['+', ['+', 2, 3], 5] = 10
     const left = exp[1];
     const right = exp[2];
 
@@ -37,19 +36,15 @@ function sum(exp) {
     );
 }
 
+// todo: add -,*,/,%
 class Eva {
     eval(exp) {
-        if (isNumber(exp)) {
-            return exp;
-        }
-        if (isString(exp)) {
-            return exp.slice(1, -1);
-        }
-        if (isAddition(exp)) {
-            return sum(exp);
-        }
+        if (isNumber(exp)) return exp;
+        if (isString(exp)) return exp.slice(1, -1);
+        // if (isAddition(exp)) return sum(exp);
+        if (isAddition(exp)) return this.eval(exp[1]) + this.eval(exp[2]);
 
-        _throw(UNIMPLEMENTED_ERROR);
+        throw (UNIMPLEMENTED_ERROR + JSON.stringify(exp));
     }
 }
 
@@ -59,4 +54,5 @@ assert.strictEqual(eva.eval(1), 1);
 assert.strictEqual(eva.eval('"hello"'), 'hello');
 assert.strictEqual(eva.eval(['+', 1, 5]), 6);
 assert.strictEqual(eva.eval(['+', ['+', 2, 3], 5]), 10);
+assert.strictEqual(eva.eval(true), 1);
 console.log('Tests are passed');
