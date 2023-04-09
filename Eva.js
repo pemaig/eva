@@ -33,18 +33,21 @@ class Eva {
         if (isRemainder(exp)) return this.eval(exp[1]) % this.eval(exp[2]);
         if (isVariableDeclaration(exp)) {
             const [_, name, value] = exp;
-            return env.define(name, value);
+            return env.define(name, this.eval(value));
         };
-        if (isVariableName(exp)) {
-            return env.lookup(exp);
-        }
+        if (isVariableName(exp)) return env.lookup(exp);
 
         _throw(UNIMPLEMENTED_ERROR + JSON.stringify(exp));
     }
 }
 
 // ------------- TESTS -------------------------
-const eva = new Eva();
+const env = new Environment({
+    null: null,
+    true: true,
+    false: false
+})
+const eva = new Eva(env);
 
 // Math
 {
@@ -65,5 +68,10 @@ const eva = new Eva();
 // Variables
 assert.strictEqual(eva.eval(['var', 'x', 10]), 10);
 assert.strictEqual(eva.eval('x'), 10);
+assert.strictEqual(eva.eval(['var', 'y', 'null']), null);
+assert.strictEqual(eva.eval('y'), null);
+assert.strictEqual(eva.eval(['var', 'a', 'true']), true);
+assert.strictEqual(eva.eval('a'), true);
+assert.strictEqual(eva.eval(['var', 'z', ['+', 3, 5]]), 8);
 
 console.log('Tests are passed');
