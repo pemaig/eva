@@ -16,8 +16,8 @@ const isDivision = (exp) => exp[0] === '/';
 const isRemainder = (exp) => exp[0] === '%';
 const isVariableDeclaration = (exp) => exp[0] === 'var';
 const isVariableName = (exp) => (
-    typeof exp === 'string' && /^[a-zA-Z][a-zA-Z0-9_]*$/.test(exp))
-
+    typeof exp === 'string' && /^[a-zA-Z][a-zA-Z0-9_]*$/.test(exp));
+const isBlock = (exp) => exp[0] === 'begin';
 
 class Eva {
     constructor(globalEnv = new Environment()) {
@@ -26,16 +26,28 @@ class Eva {
     eval(exp, env = this.globalEnv) {
         if (isNumber(exp)) return exp;
         if (isString(exp)) return exp.slice(1, -1);
-        if (isAddition(exp)) return this.eval(exp[1]) + this.eval(exp[2]);
-        if (isSubstracrion(exp)) return this.eval(exp[1]) - this.eval(exp[2]);
-        if (isMultiplication(exp)) return this.eval(exp[1]) * this.eval(exp[2]);
-        if (isDivision(exp)) return this.eval(exp[1]) / this.eval(exp[2]);
-        if (isRemainder(exp)) return this.eval(exp[1]) % this.eval(exp[2]);
+        if (isAddition(exp)) return this.eval(exp[1], env) + this.eval(exp[2], env);
+        if (isSubstracrion(exp)) return this.eval(exp[1], env) - this.eval(exp[2], env);
+        if (isMultiplication(exp)) return this.eval(exp[1], env) * this.eval(exp[2], env);
+        if (isDivision(exp)) return this.eval(exp[1], env) / this.eval(exp[2], env);
+        if (isRemainder(exp)) return this.eval(exp[1], env) % this.eval(exp[2], env);
         if (isVariableDeclaration(exp)) {
             const [_, name, value] = exp;
-            return env.define(name, this.eval(value));
+
+            return env.define(name, this.eval(value, env));
         };
         if (isVariableName(exp)) return env.lookup(exp);
+        if (isBlock(exp)) {
+            let blockEnv = new Environment({}, env);
+            let [_, ...exps] = exp;
+            let result;
+
+            exps.forEach(subExp => {
+                result = this.eval(subExp, blockEnv);
+            })
+
+            return result;
+        }
 
         _throw(UNIMPLEMENTED_ERROR + JSON.stringify(exp));
     }
@@ -66,12 +78,42 @@ const eva = new Eva(env);
 }
 
 // Variables
-assert.strictEqual(eva.eval(['var', 'x', 10]), 10);
-assert.strictEqual(eva.eval('x'), 10);
-assert.strictEqual(eva.eval(['var', 'y', 'null']), null);
-assert.strictEqual(eva.eval('y'), null);
-assert.strictEqual(eva.eval(['var', 'a', 'true']), true);
-assert.strictEqual(eva.eval('a'), true);
-assert.strictEqual(eva.eval(['var', 'z', ['+', 3, 5]]), 8);
+{
+    assert.strictEqual(eva.eval(['var', 'x', 10]), 10);
+    assert.strictEqual(eva.eval('x'), 10);
+    assert.strictEqual(eva.eval(['var', 'y', 'null']), null);
+    assert.strictEqual(eva.eval('y'), null);
+    assert.strictEqual(eva.eval(['var', 'a', 'true']), true);
+    assert.strictEqual(eva.eval('a'), true);
+    assert.strictEqual(eva.eval(['var', 'z', ['+', 3, 5]]), 8);
+}
+
+// Blocks 
+{
+    assert.strictEqual(eva.eval([
+        'begin',
+        ['var', 'x', 5],
+        ['var', 'y', 10],
+        ['*', ['*', 'x', 'y'], 2]
+    ]), 100);
+    assert.strictEqual(eva.eval([
+        'begin',
+        ['var', 'x', 10],
+        [
+            'begin',
+            ['var', 'x', 20]
+        ],
+        'x'
+    ]), 10);
+    assert.strictEqual(eva.eval([
+        'begin',
+        ['var', 'value', 10],
+        [
+            'begin',
+            ['var', 'x', ['+', 'value', 10]],
+            'x'
+        ]
+    ]), 20);
+}
 
 console.log('Tests are passed');
