@@ -10,10 +10,15 @@ class Environment {
         return (this.record[name] = value);
     }
     lookup(name) {
-        return (name in this.record) ?
-        this.record[name] : _throw(UNDEFINED_VARIABLE + name);
+        return this.resolve(name).record[name];
     }
-    // todo: implement Identifier resolution
+    resolve(name) {
+        return (
+            (this.record.hasOwnProperty(name) && this) ||
+            (!this.parentEnv && _throw(UNDEFINED_VARIABLE + name)) ||
+            (this.parentEnv.resolve(name))
+        )
+    }
 }
 
 module.exports = Environment;
