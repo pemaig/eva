@@ -9,8 +9,11 @@ class Environment {
     define(name, value) {
         return (this.record[name] = value);
     }
+    assign(name, value) {
+        return (this.resolve(name).record[name] = value);
+    }
     lookup(name) {
-        return this.resolve(name).record[name];
+        return (this.resolve(name).record[name]);
     }
     resolve(name) {
         return (

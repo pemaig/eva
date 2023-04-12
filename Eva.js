@@ -18,6 +18,7 @@ const isVariableDeclaration = (exp) => exp[0] === 'var';
 const isVariableName = (exp) => (
     typeof exp === 'string' && /^[a-zA-Z][a-zA-Z0-9_]*$/.test(exp));
 const isBlock = (exp) => exp[0] === 'begin';
+const isAssignment = (exp) => exp[0] === 'set';
 
 class Eva {
     constructor(globalEnv = new Environment()) {
@@ -47,7 +48,12 @@ class Eva {
             })
 
             return result;
-        }
+        };
+        if (isAssignment(exp)) {
+            const [_, name, value] = exp;
+
+            return env.assign(name, this.eval(value, env))
+        };
 
         _throw(UNIMPLEMENTED_ERROR + JSON.stringify(exp));
     }
@@ -114,6 +120,15 @@ const eva = new Eva(env);
             'x'
         ]
     ]), 20);
+    assert.strictEqual(eva.eval([
+        'begin',
+        ['var', 'data', 10],
+        [
+            'begin',
+            ['set', 'data', 100],
+        ],
+        'data'
+    ]), 100);
 }
 
 console.log('Tests are passed');
