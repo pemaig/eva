@@ -14,11 +14,16 @@ const isSubstracrion = (exp) => exp[0] === '-';
 const isMultiplication = (exp) => exp[0] === '*';
 const isDivision = (exp) => exp[0] === '/';
 const isRemainder = (exp) => exp[0] === '%';
-const isVariableDeclaration = (exp) => exp[0] === 'var';
+const isDeclaration = (exp) => exp[0] === 'var';
+const isAssignment = (exp) => exp[0] === 'set';
 const isVariableName = (exp) => (
     typeof exp === 'string' && /^[a-zA-Z][a-zA-Z0-9_]*$/.test(exp));
 const isBlock = (exp) => exp[0] === 'begin';
-const isAssignment = (exp) => exp[0] === 'set';
+const isIf = (exp) => exp[0] === 'if';
+const isGreater = (exp) => exp[0] === '>';
+const isGreaterOrEqual = (exp) => exp[0] === '>=';
+const isLess = (exp) => exp[0] === '<';
+const isLessOrEqual = (exp) => exp[0] === '<=';
 
 class Eva {
     constructor(globalEnv = new Environment()) {
@@ -32,7 +37,11 @@ class Eva {
         if (isMultiplication(exp)) return this.eval(exp[1], env) * this.eval(exp[2], env);
         if (isDivision(exp)) return this.eval(exp[1], env) / this.eval(exp[2], env);
         if (isRemainder(exp)) return this.eval(exp[1], env) % this.eval(exp[2], env);
-        if (isVariableDeclaration(exp)) {
+        if (isGreater(exp)) return this.eval(exp[1], env) > this.eval(exp[2], env);
+        if (isGreaterOrEqual(exp)) return this.eval(exp[1]) >= this.eval(exp[2]);
+        if (isLess(exp)) return this.eval(exp[1]) < this.eval(exp[2]);
+        if (isLessOrEqual(exp)) return this.eval(exp[1]) <= this.eval(exp[2]);
+        if (isDeclaration(exp)) {
             const [_, name, value] = exp;
 
             return env.define(name, this.eval(value, env));
@@ -54,6 +63,11 @@ class Eva {
 
             return env.assign(name, this.eval(value, env))
         };
+        if (isIf(exp)) {
+            const [_, condition, trueBranch, falseBranch] = exp;
+
+            return this.eval(condition, env) ? this.eval(trueBranch, env) : this.eval(falseBranch, env);
+        }
 
         _throw(UNIMPLEMENTED_ERROR + JSON.stringify(exp));
     }

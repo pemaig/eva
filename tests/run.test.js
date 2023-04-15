@@ -5,6 +5,7 @@ const tests = [
     require('./math.test'),
     require('./variables.test'),
     require('./blocks.test'),
+    require('./if.test'),
 ]
 
 const env = new Environment({
