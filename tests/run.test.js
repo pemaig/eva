@@ -6,6 +6,7 @@ const tests = [
     require('./variables.test'),
     require('./blocks.test'),
     require('./if.test'),
+    require('./while.test'),
 ]
 
 const env = new Environment({

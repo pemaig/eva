@@ -20,6 +20,8 @@ const isVariableName = (exp) => (
     typeof exp === 'string' && /^[a-zA-Z][a-zA-Z0-9_]*$/.test(exp));
 const isBlock = (exp) => exp[0] === 'begin';
 const isIf = (exp) => exp[0] === 'if';
+const isWhile = (exp) => exp[0] === 'while';
+const isEqual = (exp) => exp[0] === '=';
 const isGreater = (exp) => exp[0] === '>';
 const isGreaterOrEqual = (exp) => exp[0] === '>=';
 const isLess = (exp) => exp[0] === '<';
@@ -37,10 +39,11 @@ class Eva {
         if (isMultiplication(exp)) return this.eval(exp[1], env) * this.eval(exp[2], env);
         if (isDivision(exp)) return this.eval(exp[1], env) / this.eval(exp[2], env);
         if (isRemainder(exp)) return this.eval(exp[1], env) % this.eval(exp[2], env);
+        if (isEqual(exp)) return this.eval(exp[1], env) === this.eval(exp[2], env);
         if (isGreater(exp)) return this.eval(exp[1], env) > this.eval(exp[2], env);
-        if (isGreaterOrEqual(exp)) return this.eval(exp[1]) >= this.eval(exp[2]);
-        if (isLess(exp)) return this.eval(exp[1]) < this.eval(exp[2]);
-        if (isLessOrEqual(exp)) return this.eval(exp[1]) <= this.eval(exp[2]);
+        if (isGreaterOrEqual(exp)) return this.eval(exp[1], env) >= this.eval(exp[2], env);
+        if (isLess(exp)) return this.eval(exp[1], env) < this.eval(exp[2], env);
+        if (isLessOrEqual(exp)) return this.eval(exp[1], env) <= this.eval(exp[2], env);
         if (isDeclaration(exp)) {
             const [_, name, value] = exp;
 
@@ -67,6 +70,16 @@ class Eva {
             const [_, condition, trueBranch, falseBranch] = exp;
 
             return this.eval(condition, env) ? this.eval(trueBranch, env) : this.eval(falseBranch, env);
+        }
+        if (isWhile(exp)) {
+            const [_, condition, body] = exp;
+            let result;
+
+            while (this.eval(condition, env)) {
+                result = this.eval(body, env);
+            }
+
+            return result;
         }
 
         _throw(UNIMPLEMENTED_ERROR + JSON.stringify(exp));
