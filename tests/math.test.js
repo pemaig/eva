@@ -11,4 +11,10 @@ module.exports = (eva) => {
     assert.strictEqual(eva.eval(['*', ['*', 3, 2], 2]), 12);
     assert.strictEqual(eva.eval(['/', ['/', 6, 2], 3]), 1);
     assert.strictEqual(eva.eval(['%', ['%', 9, 5], 3]), 1);
+    assert.strictEqual(eva.eval([
+        'begin',
+        ['var', 'x', 9],
+        ['++', 'x'],
+        'x'
+    ]), 10);
 }

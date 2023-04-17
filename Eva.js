@@ -26,6 +26,9 @@ const isGreater = (exp) => exp[0] === '>';
 const isGreaterOrEqual = (exp) => exp[0] === '>=';
 const isLess = (exp) => exp[0] === '<';
 const isLessOrEqual = (exp) => exp[0] === '<=';
+const isIncrement = (exp) => exp[0] === '++';
+// TODO: 
+// implement logical operators - or, and, not 
 
 class Eva {
     constructor(globalEnv = new Environment()) {
@@ -39,6 +42,15 @@ class Eva {
         if (isMultiplication(exp)) return this.eval(exp[1], env) * this.eval(exp[2], env);
         if (isDivision(exp)) return this.eval(exp[1], env) / this.eval(exp[2], env);
         if (isRemainder(exp)) return this.eval(exp[1], env) % this.eval(exp[2], env);
+        if (isIncrement(exp)) {
+            const [_, varName] = exp;
+            const oldValue = env.lookup(varName);
+            const newValue = oldValue + 1;
+
+            env.assign(varName, newValue);
+
+            return newValue;
+        };
         if (isEqual(exp)) return this.eval(exp[1], env) === this.eval(exp[2], env);
         if (isGreater(exp)) return this.eval(exp[1], env) > this.eval(exp[2], env);
         if (isGreaterOrEqual(exp)) return this.eval(exp[1], env) >= this.eval(exp[2], env);
