@@ -28,7 +28,11 @@ const isLess = (exp) => exp[0] === '<';
 const isLessOrEqual = (exp) => exp[0] === '<=';
 const isIncrement = (exp) => exp[0] === '++';
 // TODO: 
-// implement logical operators - or, and, not 
+// Implement logical operators: (or foo default), (and x y), (not value)
+// const isOr = (exp) => exp[0] === 'or';
+// const isAnd = (exp) => exp[0] === 'and';
+// const isNot = (exp) => exp[0] === 'not';
+
 
 class Eva {
     constructor(globalEnv = new Environment()) {
