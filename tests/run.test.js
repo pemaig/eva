@@ -1,4 +1,3 @@
-const Environment = require('../Environment');
 const Eva = require('../Eva');
 const tests = [
     require('./eval.test'),
@@ -7,15 +6,13 @@ const tests = [
     require('./blocks.test'),
     require('./if.test'),
     require('./while.test'),
+    require('./built-in-function.test'),
 ]
 
-const env = new Environment({
-    null: null,
-    true: true,
-    false: false
-})
-const eva = new Eva(env);
+const eva = new Eva();
 
 tests.forEach(test => test(eva));
+
+eva.eval(['print', '"Hello"', '"World!"']);
 
 console.log('Tests are passed');

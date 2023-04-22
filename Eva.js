@@ -1,4 +1,3 @@
-const assert = require('assert');
 const _throw = require('./throw');
 const Environment = require('./Environment');
 const { UNIMPLEMENTED_ERROR } = require('./errors');
@@ -9,23 +8,14 @@ const isString = (exp) => (
     exp[0] === '"' &&
     exp[exp.length - 1] === '"'
 );
-const isAddition = (exp) => exp[0] === '+';
-const isSubstracrion = (exp) => exp[0] === '-';
-const isMultiplication = (exp) => exp[0] === '*';
-const isDivision = (exp) => exp[0] === '/';
 const isRemainder = (exp) => exp[0] === '%';
 const isDeclaration = (exp) => exp[0] === 'var';
 const isAssignment = (exp) => exp[0] === 'set';
 const isVariableName = (exp) => (
-    typeof exp === 'string' && /^[a-zA-Z][a-zA-Z0-9_]*$/.test(exp));
+    typeof exp === 'string' && /^[+\-*/<>=a-zA-Z0-9_]*$/.test(exp));
 const isBlock = (exp) => exp[0] === 'begin';
 const isIf = (exp) => exp[0] === 'if';
 const isWhile = (exp) => exp[0] === 'while';
-const isEqual = (exp) => exp[0] === '=';
-const isGreater = (exp) => exp[0] === '>';
-const isGreaterOrEqual = (exp) => exp[0] === '>=';
-const isLess = (exp) => exp[0] === '<';
-const isLessOrEqual = (exp) => exp[0] === '<=';
 const isIncrement = (exp) => exp[0] === '++';
 // TODO: 
 // Implement logical operators: (or foo default), (and x y), (not value)
@@ -35,16 +25,12 @@ const isIncrement = (exp) => exp[0] === '++';
 
 
 class Eva {
-    constructor(globalEnv = new Environment()) {
+    constructor(globalEnv = GlobalEnvironment) {
         this.globalEnv = globalEnv;
     }
     eval(exp, env = this.globalEnv) {
         if (isNumber(exp)) return exp;
         if (isString(exp)) return exp.slice(1, -1);
-        if (isAddition(exp)) return this.eval(exp[1], env) + this.eval(exp[2], env);
-        if (isSubstracrion(exp)) return this.eval(exp[1], env) - this.eval(exp[2], env);
-        if (isMultiplication(exp)) return this.eval(exp[1], env) * this.eval(exp[2], env);
-        if (isDivision(exp)) return this.eval(exp[1], env) / this.eval(exp[2], env);
         if (isRemainder(exp)) return this.eval(exp[1], env) % this.eval(exp[2], env);
         if (isIncrement(exp)) {
             const [_, varName] = exp;
@@ -55,11 +41,6 @@ class Eva {
 
             return newValue;
         };
-        if (isEqual(exp)) return this.eval(exp[1], env) === this.eval(exp[2], env);
-        if (isGreater(exp)) return this.eval(exp[1], env) > this.eval(exp[2], env);
-        if (isGreaterOrEqual(exp)) return this.eval(exp[1], env) >= this.eval(exp[2], env);
-        if (isLess(exp)) return this.eval(exp[1], env) < this.eval(exp[2], env);
-        if (isLessOrEqual(exp)) return this.eval(exp[1], env) <= this.eval(exp[2], env);
         if (isDeclaration(exp)) {
             const [_, name, value] = exp;
 
@@ -97,9 +78,58 @@ class Eva {
 
             return result;
         }
+        if (Array.isArray(exp)) {
+            const fn = this.eval(exp[0], env);
+            const args = exp
+                .slice(1)
+                .map(arg => this.eval(arg, env));
+            
+
+            if (typeof fn === 'function') {
+                return fn(...args);
+            }
+        }
 
         _throw(UNIMPLEMENTED_ERROR + JSON.stringify(exp));
     }
 }
+
+const GlobalEnvironment = new Environment({
+    null: null,
+    true: true,
+    false: false,
+
+    '+'(op1, op2) {
+        return op1 + op2;
+    },
+    '-'(op1, op2 = null) {
+        return op2 === null ? (-op1) : (op1 - op2);
+    },
+    '*'(op1, op2) {
+        return op1 * op2;
+    },
+    '/'(op1, op2) {
+        return op1 / op2;
+    },
+    '>'(op1, op2) {
+        return op1 > op2;
+    },
+    '<'(op1, op2) {
+        return op1 < op2;
+    },
+    '>='(op1, op2) {
+        return op1 >= op2;
+    },
+    '<='(op1, op2) {
+        return op1 <= op2;
+    },
+    '='(op1, op2) {
+        return op1 === op2;
+    },
+    
+    print(...args) {
+        console.log(...args);
+    }
+})
 
 module.exports = Eva;
