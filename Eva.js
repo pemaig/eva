@@ -8,11 +8,10 @@ const isString = (exp) => (
     exp[0] === '"' &&
     exp[exp.length - 1] === '"'
 );
-const isRemainder = (exp) => exp[0] === '%';
 const isDeclaration = (exp) => exp[0] === 'var';
 const isAssignment = (exp) => exp[0] === 'set';
 const isVariableName = (exp) => (
-    typeof exp === 'string' && /^[+\-*/<>=a-zA-Z0-9_]*$/.test(exp));
+    typeof exp === 'string' && /^[+\-*/<>=%a-zA-Z0-9_]*$/.test(exp));
 const isBlock = (exp) => exp[0] === 'begin';
 const isIf = (exp) => exp[0] === 'if';
 const isWhile = (exp) => exp[0] === 'while';
@@ -31,7 +30,6 @@ class Eva {
     eval(exp, env = this.globalEnv) {
         if (isNumber(exp)) return exp;
         if (isString(exp)) return exp.slice(1, -1);
-        if (isRemainder(exp)) return this.eval(exp[1], env) % this.eval(exp[2], env);
         if (isIncrement(exp)) {
             const [_, varName] = exp;
             const oldValue = env.lookup(varName);
@@ -110,6 +108,9 @@ const GlobalEnvironment = new Environment({
     },
     '/'(op1, op2) {
         return op1 / op2;
+    },
+    '%'(op1, op2) {
+        return op1 % op2;
     },
     '>'(op1, op2) {
         return op1 > op2;
