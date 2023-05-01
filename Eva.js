@@ -9,6 +9,7 @@ const isString = (exp) => (
     exp[exp.length - 1] === '"'
 );
 const isDeclaration = (exp) => exp[0] === 'var';
+const isFunctionDeclaration = (exp) => exp[0] === 'def';
 const isAssignment = (exp) => exp[0] === 'set';
 const isVariableName = (exp) => (
     typeof exp === 'string' && /^[+\-*/<>=%a-zA-Z0-9_]*$/.test(exp));
@@ -46,15 +47,9 @@ class Eva {
         };
         if (isVariableName(exp)) return env.lookup(exp);
         if (isBlock(exp)) {
-            let blockEnv = new Environment({}, env);
-            let [_, ...exps] = exp;
-            let result;
-
-            exps.forEach(subExp => {
-                result = this.eval(subExp, blockEnv);
-            })
-
-            return result;
+            const blockEnv = new Environment({}, env);
+            
+            return this._evalBlock(exp, blockEnv);
         };
         if (isAssignment(exp)) {
             const [_, name, value] = exp;
@@ -76,19 +71,57 @@ class Eva {
 
             return result;
         }
+        if (isFunctionDeclaration(exp)) {
+            const [_, name, params, body] = exp;
+
+            const fn = {
+                params,
+                body,
+                env
+            };
+
+            return env.define(name, fn);
+        }
         if (Array.isArray(exp)) {
             const fn = this.eval(exp[0], env);
             const args = exp
                 .slice(1)
                 .map(arg => this.eval(arg, env));
-            
+
 
             if (typeof fn === 'function') {
                 return fn(...args);
             }
+
+            const activationRecord = {};
+
+            fn.params.forEach((param, index) => {
+                activationRecord[param] = args[index];
+            });
+
+            const activationEnv = new Environment(activationRecord, fn.env);
+
+            return this._evalBody(fn.body, activationEnv);
         }
 
         _throw(UNIMPLEMENTED_ERROR + JSON.stringify(exp));
+    }
+    _evalBody(body, env) {
+        if (isBlock(body)) {
+            return this._evalBlock(body, env);
+        }
+
+        return this.eval(body, env);
+    }
+    _evalBlock(block, env) {
+        const [_, ...exps] = block;
+        let result;
+
+        exps.forEach(subExp => {
+            result = this.eval(subExp, env);
+        })
+
+        return result;
     }
 }
 
@@ -127,7 +160,6 @@ const GlobalEnvironment = new Environment({
     '='(op1, op2) {
         return op1 === op2;
     },
-    
     print(...args) {
         console.log(...args);
     }
