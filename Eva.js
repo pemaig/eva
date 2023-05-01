@@ -10,6 +10,7 @@ const isString = (exp) => (
 );
 const isDeclaration = (exp) => exp[0] === 'var';
 const isFunctionDeclaration = (exp) => exp[0] === 'def';
+const isLambdaFunction = (exp) => exp[0] === 'lambda';
 const isAssignment = (exp) => exp[0] === 'set';
 const isVariableName = (exp) => (
     typeof exp === 'string' && /^[+\-*/<>=%a-zA-Z0-9_]*$/.test(exp));
@@ -74,13 +75,18 @@ class Eva {
         if (isFunctionDeclaration(exp)) {
             const [_, name, params, body] = exp;
 
-            const fn = {
+            const varExp = ['var', name, ['lambda', params, body]];
+
+            return this.eval(varExp, env);
+        }
+        if (isLambdaFunction(exp)) {
+            const [_, params, body] = exp;
+
+            return {
                 params,
                 body,
                 env
             };
-
-            return env.define(name, fn);
         }
         if (Array.isArray(exp)) {
             const fn = this.eval(exp[0], env);
